@@ -1,7 +1,6 @@
 from pathlib import Path
 import os
-
-import dj_database_url  # pip install dj-database-url
+import dj_database_url
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,11 +11,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY", get_random_secret_key())
 # 🚫 Debug im Live-Betrieb ausschalten
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-# 🌍 Erlaubte Hosts (Render-Domain)
+# 🌍 Erlaubte Hosts (Render-Domain + lokal)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    os.environ.get("RENDER_EXTERNAL_HOSTNAME", ""),  # Render setzt diese Variable
+    os.environ.get("RENDER_EXTERNAL_HOSTNAME", ""),
 ]
 
 # 📦 Installed Apps
@@ -32,13 +31,9 @@ INSTALLED_APPS = [
     "cart",
     "checkout",
     "accounts",
-    # Cloudinary
-    "cloudinary",
-    "cloudinary_storage",
+    # ImageKit
+    "imagekit",
 ]
-
-# 📂 Media über Cloudinary
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 # 🔐 Middleware
 MIDDLEWARE = [
@@ -103,10 +98,17 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# 📂 Media Fallback (nur lokal, falls CLOUDINARY_URL nicht gesetzt ist)
-if not os.environ.get("CLOUDINARY_URL"):
+# 📂 Media Files
+# Mit ImageKit speichern wir nur URLs in der DB.
+# Für lokalen Fallback (wenn keine ImageKit Keys gesetzt sind):
+if not os.environ.get("IMAGEKIT_URL_ENDPOINT"):
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
+
+# 🔧 ImageKit Konfiguration (aus Env-Variablen)
+IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT")
+IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY")
+IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY")
 
 # 🔑 Default PK
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
