@@ -1,6 +1,11 @@
 from pathlib import Path
 import os
-print(">>> CLOUDINARY_URL:", repr(os.getenv("CLOUDINARY_URL")))
+
+cloud_url = os.environ.get("CLOUDINARY_URL", "")
+if not cloud_url.startswith("cloudinary://"):
+    print("❌ CLOUDINARY_URL ist leer oder falsch gesetzt:", repr(cloud_url))
+else:
+    print("✅ CLOUDINARY_URL gefunden:", repr(cloud_url))
 import dj_database_url  # pip install dj-database-url
 from django.core.management.utils import get_random_secret_key
 
