@@ -1,11 +1,6 @@
 from pathlib import Path
 import os
 
-cloud_url = os.environ.get("CLOUDINARY_URL", "")
-if not cloud_url.startswith("cloudinary://"):
-    print("❌ CLOUDINARY_URL ist leer oder falsch gesetzt:", repr(cloud_url))
-else:
-    print("✅ CLOUDINARY_URL gefunden:", repr(cloud_url))
 import dj_database_url  # pip install dj-database-url
 from django.core.management.utils import get_random_secret_key
 
@@ -41,17 +36,14 @@ INSTALLED_APPS = [
     "cloudinary",
     "cloudinary_storage",
 ]
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# 📂 Media über Cloudinary
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 # 🔐 Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # <--- für statische Files
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # für statische Files
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -111,10 +103,8 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# 📂 Media Files → lokal vs. Render mit Cloudinary
-if os.environ.get("CLOUDINARY_URL"):
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-else:
+# 📂 Media Fallback (nur lokal, falls CLOUDINARY_URL nicht gesetzt ist)
+if not os.environ.get("CLOUDINARY_URL"):
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
