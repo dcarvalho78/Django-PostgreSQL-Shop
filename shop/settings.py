@@ -31,8 +31,7 @@ INSTALLED_APPS = [
     "cart",
     "checkout",
     "accounts",
-    # ImageKit
-    "imagekit",
+
 ]
 
 # 🔐 Middleware
