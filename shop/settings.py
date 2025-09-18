@@ -1,11 +1,22 @@
 from pathlib import Path
 import os
+import dj_database_url  # <--- installieren mit pip
+from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-+64kn9qjz4y-7u)+$j#w0gcwe-j8elkr74w=xvpqy3hz-r2q+^"
-DEBUG = True
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+# 🔑 SECRET_KEY aus Environment laden
+SECRET_KEY = os.environ.get("SECRET_KEY", get_random_secret_key())
+
+# 🚫 Debug im Live-Betrieb ausschalten
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# 🌍 Erlaubte Hosts (Render-Domain)
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    os.environ.get("RENDER_EXTERNAL_HOSTNAME", ""),  # Render setzt diese Variable
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -22,6 +33,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # <--- für statische Files
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -51,16 +63,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "shop.wsgi.application"
 
-# 🔑 Lokale Postgres-DB
+# 🛢️ Datenbank: Render liefert DATABASE_URL
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "shop_db",
-        "USER": "shop_user",
-        "PASSWORD": "NeuesSicheresPasswort",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -75,9 +84,13 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# 📂 Statische Dateien für Render
 STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# 📂 Medien
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
