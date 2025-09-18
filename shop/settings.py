@@ -1,11 +1,11 @@
 from pathlib import Path
 import os
-import dj_database_url  # <--- installieren mit pip
+import dj_database_url  # pip install dj-database-url
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 🔑 SECRET_KEY aus Environment laden
+# 🔑 SECRET_KEY aus Environment laden oder generieren
 SECRET_KEY = os.environ.get("SECRET_KEY", get_random_secret_key())
 
 # 🚫 Debug im Live-Betrieb ausschalten
@@ -18,6 +18,7 @@ ALLOWED_HOSTS = [
     os.environ.get("RENDER_EXTERNAL_HOSTNAME", ""),  # Render setzt diese Variable
 ]
 
+# 📦 Installed Apps
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -29,8 +30,13 @@ INSTALLED_APPS = [
     "store",
     "cart",
     "checkout",
+    "accounts",
+    # Cloudinary
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
+# 🔐 Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # <--- für statische Files
@@ -44,6 +50,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "shop.urls"
 
+# 🎨 Templates
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -66,12 +73,13 @@ WSGI_APPLICATION = "shop.wsgi.application"
 # 🛢️ Datenbank: Render liefert DATABASE_URL
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
+        default=os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
         conn_max_age=600,
-        ssl_require=True
+        ssl_require=False,  # auf Render ggf. True setzen
     )
 }
 
+# 🔑 Passwort-Validierung
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -79,24 +87,29 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# 🌍 Sprache & Zeit
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# 📂 Statische Dateien für Render
+# 📂 Static Files
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# 📂 Medien
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# 📂 Media Files → lokal vs. Render mit Cloudinary
+if os.environ.get("CLOUDINARY_URL"):
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+else:
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
 
+# 🔑 Default PK
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Login/Logout Redirects
+# 🔐 Auth
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
@@ -105,6 +118,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+# 📝 Logging
 LOGGING = {
     "version": 1,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
